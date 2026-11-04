@@ -212,7 +212,10 @@ async function matchesByIdentity(team, league, season, side, apiKey, request) {
     .replace(/\s+(FC|CF|AFC)$/i, "")
     .trim();
   // 공식 API에서 확인한 시즌 통계명 → 경기 대회명.
-  const leagueName = league === "LaLiga" ? "La Liga" : league;
+  const saudiLeague=normalizeEntityName(league)==='saudiproleague';
+  // Confirmed from the provider's SA catalog: season stats use Saudi Pro League,
+  // while fixture catalog uses Pro League. Country is required to avoid other Pro Leagues.
+  const leagueName = saudiLeague ? "Pro League" : league === "LaLiga" ? "La Liga" : league;
   const teamResponse = await queryHighlightly(
     `/teams?${new URLSearchParams({ name: teamName, type: "club", limit: "100" })}`,
     apiKey,
@@ -220,13 +223,15 @@ async function matchesByIdentity(team, league, season, side, apiKey, request) {
   );
   if (teamResponse.status !== 200) return teamResponse;
   const leagueResponse = await queryHighlightly(
-    `/leagues?${new URLSearchParams({ leagueName, season, limit: "100" })}`,
+    `/leagues?${new URLSearchParams(saudiLeague?{countryCode:"SA",season,limit:"100"}:{ leagueName, season, limit: "100" })}`,
     apiKey,
     request,
   );
   if (leagueResponse.status !== 200) return leagueResponse;
   const resolvedTeam = selectExactEntity(teamResponse.body?.data, team);
-  const resolvedLeague = selectExactEntity(leagueResponse.body?.data, league);
+  const leagueRows=leagueResponse.body?.data;
+  const candidates=saudiLeague&&Array.isArray(leagueRows)?leagueRows.filter(row=>row.country?.code==='SA'||row.country?.name==='Saudi Arabia'):leagueRows;
+  const resolvedLeague = selectExactEntity(candidates, leagueName);
   if (!resolvedTeam || !resolvedLeague)
     return {
       status: 422,
