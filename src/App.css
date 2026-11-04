@@ -1,0 +1,125 @@
+.app {
+  min-height: 100vh;
+  background: #007bff;
+  color: white;
+}
+.hero {
+  max-width: 1400px;
+  min-height: calc(100vh - 72px);
+  margin: 0 auto;
+  padding: 140px 40px 80px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+}
+.hero-label {
+  color: #60ff24;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  margin-bottom: 20px;
+}
+.hero h1 {
+  font-size: clamp(40px, 6vw, 80px);
+  font-weight: 800;
+  letter-spacing: -2px;
+  line-height: 1.15;
+  margin-bottom: 20px;
+  overflow-wrap: anywhere;
+}
+.hero-description {
+  font-size: 20px;
+  color: #e8f3ff;
+  line-height: 1.7;
+  margin-bottom: 36px;
+}
+.explore-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 16px 28px;
+  background: #60ff24;
+  color: #102000;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 700;
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s ease;
+}
+.explore-btn:hover {
+  background: #a1ff73;
+  transform: translateY(-3px);
+}
+.info-panel {
+  width: min(100%, 640px);
+  padding: 32px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  background: #0062cc;
+}
+.status-label {
+  color: #60ff24;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+.info-panel h2 {
+  margin: 16px 0 12px;
+  font-size: 24px;
+}
+.info-panel p {
+  color: #e8f3ff;
+  line-height: 1.8;
+  word-break: keep-all;
+}
+.text-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 28px;
+  font-weight: 700;
+  color: #60ff24;
+}
+.text-link:hover {
+  text-decoration: underline;
+}
+.skip-link {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  padding: 12px 20px;
+  z-index: 10;
+  background: #102000;
+  transform: translateY(-160%);
+}
+.skip-link:focus {
+  transform: translateY(0);
+}
+@media (max-width: 768px) {
+  .hero {
+    padding: 72px 20px 60px;
+  }
+  .hero h1 {
+    letter-spacing: -1px;
+  }
+  .hero-label {
+    font-size: 12px;
+    letter-spacing: 2px;
+  }
+  .hero-description {
+    font-size: 16px;
+  }
+  .info-panel {
+    padding: 24px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+  }
+}
