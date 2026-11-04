@@ -50,7 +50,7 @@ const server = createServer(async (req, res) => {
 });
 server.listen(port, host, () =>
   console.log(
-    `BALLER backend: http://${host}:${port} (${repo.kind}, live API disabled by default)`,
+    `BALLER backend: http://${host}:${port} (${repo.kind}, live API ${process.env.BALLER_ALLOW_LIVE_API==='true'?'enabled':'disabled'})`,
   ),
 );
 async function stop() {

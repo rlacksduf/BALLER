@@ -26,11 +26,7 @@ export default function HomePage() {
       <div className="home-hero">
         <section className="home-copy">
           <p className="hero-label">{t("축구를 보는 새로운 시선")}</p>
-          <h1>
-            Know Your
-            <br />
-            <span>Players.</span>
-          </h1>
+          <h1 className="animated-headline" aria-label="Know Your Players."><span className="hero-word" aria-hidden="true">Know</span>{' '}<span className="hero-word" aria-hidden="true">Your</span><br/><span className="hero-word hero-word-accent" aria-hidden="true">Players.</span></h1>
           <p className="home-lead">
             {t("기록 너머의 플레이를 발견하세요.")}
             <br />

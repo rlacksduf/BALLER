@@ -1,3 +1,4 @@
+import AnimatedNumber from "../components/AnimatedNumber";
 import { t, locale } from "../i18n";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
@@ -135,15 +136,15 @@ export default function PlayerDetailPage() {
               </label>
             </div>
             <dl className="detail-summary">
-              {[
-                [t("득점"), display(goals)],
-                [t("도움"), display(total("assists"))],
-                [t("출전 경기"), display(total("gamesPlayed"))],
-                [t("출전 시간(분)"), display(minutes)],
-              ].map(([label, value]) => (
+              {([
+                [t("득점"), goals],
+                [t("도움"), total("assists")],
+                [t("출전 경기"), total("gamesPlayed")],
+                [t("출전 시간(분)"), minutes],
+              ] as const).map(([label, value]) => (
                 <div key={label}>
                   <dt>{typeof label === "string" ? t(label) : label}</dt>
-                  <dd>{value}</dd>
+                  <dd><AnimatedNumber value={value} /></dd>
                 </div>
               ))}
             </dl>

@@ -1,3 +1,5 @@
+import SmoothScroll from "./components/SmoothScroll";
+import MotionEffects from "./components/MotionEffects";
 import { t, useLanguage } from "./i18n";
 import LanguageSelector from "./components/LanguageSelector";
 import { BrowserRouter, Link, Route, Routes } from "react-router-dom";
@@ -13,12 +15,15 @@ import ComparePage from "./pages/ComparePage";
 import NotFoundPage from "./pages/NotFoundPage";
 import "./App.css";
 import "./design.css";
+import "./motion.css";
 
 function App() {
   useLanguage();
   return (
     <BrowserRouter>
       <RouteEffects />
+      <MotionEffects />
+      <SmoothScroll />
       <DatabaseHydration />
       <div className="app">
         <a className="skip-link" href="#main-content">

@@ -378,5 +378,9 @@
   " · DB 조회 범위가 제한된 부분 기록입니다.": " · Partial records within a bounded database query.",
   "저장된 경기 기록과 분석 요약을 먼저 표시합니다. 새 수집은 버튼을 눌렀을 때만 요청하며, API 제한 중에는 기존 기록을 유지합니다. 누락된 지표는 0으로 채우지 않습니다.": "Saved match records and analysis snapshots are shown first. Collection is requested only when you press the button. Existing records remain available during API limits. Missing metrics are not filled with zero.",
   "저장된 프로필과 시즌 기록 기준입니다. 일부 항목이 없거나 최신 소속과 다를 수 있습니다.": "Based on saved profile and season records. Some fields may be missing or differ from the current club.",
-  "저장된 선수를 먼저 검색합니다. 외부 API 제한 중에도 저장된 선수의 시즌 기록을 확인할 수 있습니다.": "Searches saved players first. Their season records remain available during external API limits."
+  "저장된 선수를 먼저 검색합니다. 외부 API 제한 중에도 저장된 선수의 시즌 기록을 확인할 수 있습니다.": "Searches saved players first. Their season records remain available during external API limits.",
+  "저장된 선수 바로 검색": "Search saved players",
+  "저장된 선수 검색 결과 {count}명": "{count} saved players found",
+  "저장된 선수 중 일치하는 이름이 없습니다. 외부 API 제한 중에는 새 선수를 조회할 수 없습니다.": "No matching saved player. New players cannot be looked up while external API access is restricted.",
+  "저장된 선수 이름 검색 · 예: Haaland": "Search saved players · e.g. Haaland"
 }

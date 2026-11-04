@@ -254,7 +254,7 @@ export async function footballResponse(url, apiKey, request) {
       if (stored) {
         const {preferStored}=await import('./db/read-policy.mjs');
         const effectiveKey=apiKey??process.env.HIGHLIGHTLY_API_KEY;
-        return preferStored(stored,()=>queryHighlightly(stored.refreshPath,effectiveKey),{allowed:!!stored.refreshPath&&process.env.BALLER_ALLOW_LIVE_API==='true'&&!(getQuotaStatus(effectiveKey).blockedUntil>Date.now())});
+        return preferStored(stored,()=>queryHighlightly(stored.refreshPath,effectiveKey),{allowed:url.searchParams.get('refresh')==='1'&&!!stored.refreshPath&&process.env.BALLER_ALLOW_LIVE_API==='true'&&!(getQuotaStatus(effectiveKey).blockedUntil>Date.now())});
       }
       // A read in saved-only mode returns an empty DB search, not a provider error.
       if(url.searchParams.has('name')&&process.env.BALLER_ALLOW_LIVE_API!=='true'&&url.searchParams.get('name').trim().length>=2&&url.searchParams.get('name').trim().length<=80&&/^\d{1,5}$/.test(url.searchParams.get('offset')??'0')&&Number(url.searchParams.get('offset')??0)<=10000)

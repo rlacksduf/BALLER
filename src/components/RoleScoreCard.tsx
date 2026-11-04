@@ -1,3 +1,4 @@
+import AnimatedNumber from "./AnimatedNumber";
 import { t } from "../i18n";
 import {
   axisLabels,
@@ -26,7 +27,7 @@ export default function RoleScoreCard({ data }: { data: Aggregate }) {
           className="score-number"
           aria-label={`역할 종합 점수 ${score.overall ?? "평가 보류"}`}
         >
-          {score.overall ?? "—"}
+          <AnimatedNumber value={score.overall} />
           <small>/ 100</small>
         </div>
       </div>

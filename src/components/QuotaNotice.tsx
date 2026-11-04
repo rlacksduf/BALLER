@@ -10,10 +10,9 @@ export default function QuotaNotice() {
       .then((response) => response.json())
       .then((body) => {
         if (
-          typeof body.blockedUntil === "number" &&
-          body.blockedUntil > Date.now()
+          typeof body.blockedUntil === "number"
         )
-          markQuota(body.blockedUntil);
+          markQuota(body.blockedUntil > Date.now() ? body.blockedUntil : 0);
       })
       .catch(() => {});
     return () => controller.abort();

@@ -16,18 +16,18 @@ async function get(path: string, signal?: AbortSignal): Promise<unknown> {
 }
 const record = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null;
-export async function searchApiPlayers(
+export async function searchPlayerDirectory(
   name: string,
   signal?: AbortSignal,
   offset = 0,
-): Promise<ApiPlayer[]> {
+): Promise<{players:ApiPlayer[];savedOnly:boolean}> {
   const body = await get(
     new URLSearchParams({ name, offset: String(offset) }).toString(),
     signal,
   );
   if (!record(body) || !Array.isArray(body.data))
     throw new Error("선수 목록 응답 형식이 올바르지 않습니다.");
-  return body.data.map((row: unknown) => {
+  const players=body.data.map((row: unknown) => {
     if (
       !record(row) ||
       !Number.isSafeInteger(row.id) ||
@@ -36,6 +36,12 @@ export async function searchApiPlayers(
       throw new Error("선수 정보 형식이 올바르지 않습니다.");
     return { id: row.id as number, name: row.name, logo: safeLogo(row.logo) };
   });
+  return {players,savedOnly:body.scope==='stored-players'};
+}
+export async function searchApiPlayers(name:string,signal?:AbortSignal,offset=0):Promise<ApiPlayer[]>{
+ const result=await searchPlayerDirectory(name,signal,offset);
+ if(result.savedOnly&&!result.players.length)throw new Error('저장된 선수 중 일치하는 이름이 없습니다. 외부 API 제한 중에는 새 선수를 조회할 수 없습니다.');
+ return result.players;
 }
 export async function getApiPlayerDetails(
   id: number,

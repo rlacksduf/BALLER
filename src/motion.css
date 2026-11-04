@@ -1,0 +1,204 @@
+/* Short, finite motion keeps the focus on players and records. */
+.home-copy .hero-word {
+  display: inline-block;
+  color: white;
+}
+.home-copy .hero-word-accent {
+  color: var(--accent);
+}
+@keyframes word-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(28px) rotate(2deg);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) rotate(0);
+  }
+}
+@keyframes panel-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes marker-a-arrive {
+  from {
+    opacity: 0;
+    transform: translate(-30px, 15px) rotate(-22deg);
+  }
+  to {
+    opacity: 1;
+    transform: translate(0, 0) rotate(-12deg);
+  }
+}
+@keyframes marker-b-arrive {
+  from {
+    opacity: 0;
+    transform: translate(30px, -15px) rotate(22deg);
+  }
+  to {
+    opacity: 1;
+    transform: translate(0, 0) rotate(10deg);
+  }
+}
+@keyframes versus-arrive {
+  from {
+    opacity: 0;
+    scale: 0.65;
+  }
+  70% {
+    scale: 1.08;
+  }
+  to {
+    opacity: 1;
+    scale: 1;
+  }
+}
+@keyframes intro-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .home-copy .hero-word {
+    display: inline-block;
+    color: white;
+    animation: word-arrive 1.1s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  .home-copy .hero-word:nth-child(2) {
+    animation-delay: 100ms;
+  }
+  .home-copy .hero-word-accent {
+    color: var(--accent);
+    animation-delay: 210ms;
+  }
+  .home-copy .hero-label,
+  .home-copy .home-lead,
+  .home-copy .home-search,
+  .hero-shortcuts {
+    animation: intro-arrive 0.85s ease-out both;
+  }
+  .home-copy .home-lead {
+    animation-delay: 280ms;
+  }
+  .home-copy .home-search {
+    animation-delay: 340ms;
+  }
+  .hero-shortcuts {
+    animation-delay: 400ms;
+  }
+  .featured-matchup {
+    animation: panel-arrive 1.15s cubic-bezier(0.16, 1, 0.3, 1) 180ms both;
+  }
+  .marker-a {
+    animation: marker-a-arrive 1.2s cubic-bezier(0.16, 1, 0.3, 1) 350ms both;
+  }
+  .marker-b {
+    animation: marker-b-arrive 1.2s cubic-bezier(0.16, 1, 0.3, 1) 450ms both;
+  }
+  .pitch-art > strong {
+    animation: versus-arrive 1s cubic-bezier(0.16, 1, 0.3, 1) 600ms both;
+  }
+  .hero:not(.home-page) > .hero-label,
+  .hero:not(.home-page) > h1,
+  .hero:not(.home-page) > .hero-description {
+    animation: intro-arrive 0.75s ease-out both;
+  }
+  .hero:not(.home-page) > h1 {
+    animation-delay: 60ms;
+  }
+  .hero:not(.home-page) > .hero-description {
+    animation-delay: 120ms;
+  }
+  .battle-cards .player-card:first-child {
+    animation: battle-left 1s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  .battle-cards .player-card:last-child {
+    animation: battle-right 1s cubic-bezier(0.16, 1, 0.3, 1) 100ms both;
+  }
+  .battle-cards .versus {
+    animation: versus-arrive 0.95s cubic-bezier(0.16, 1, 0.3, 1) 220ms both;
+  }
+  /* Viewport reveals are managed by MotionEffects; avoid competing CSS transforms. */
+  .player-grid .player-card,
+  .final-verdict {
+    animation: none;
+  }
+  .explore-btn,
+  .player-card,
+  .featured-matchup,
+  .api-player-list button,
+  .stat-categories button {
+    transition:
+      transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1),
+      background-color 0.2s,
+      border-color 0.2s,
+      box-shadow 0.2s;
+  }
+  .explore-btn:active,
+  .api-player-list button:active {
+    transform: scale(0.97);
+  }
+  .home-search {
+    transition: box-shadow 0.22s;
+  }
+  .home-search:focus-within {
+    box-shadow:
+      0 0 0 4px #60ff2440,
+      0 12px 32px #00326a1a;
+  }
+  .api-search-form input,
+  .battle-picker input {
+    transition:
+      border-color 0.2s,
+      box-shadow 0.2s;
+  }
+  .api-search-form input:focus-visible,
+  .battle-picker input:focus-visible {
+    box-shadow: 0 0 0 4px #60ff2422;
+  }
+  .feature-arrow {
+    transition: transform 0.25s;
+  }
+  .home-features a:hover .feature-arrow {
+    transform: translate(3px, -3px);
+  }
+  .nav a {
+    transition:
+      color 0.2s,
+      border-color 0.2s;
+  }
+}
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .featured-matchup:hover {
+    transform: translateY(-4px);
+    border-color: #ffffff70;
+    box-shadow: 0 12px 30px #00326a25;
+  }
+  .player-card:hover {
+    box-shadow: 0 12px 28px #00326a20;
+  }
+  .api-player-list button:hover {
+    transform: translateY(-2px);
+    border-color: var(--accent);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
