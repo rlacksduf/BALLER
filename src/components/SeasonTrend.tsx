@@ -54,7 +54,7 @@ export default function SeasonTrend({
           <YAxis tick={{ fill: "#fff", fontSize: 11 }} />
           <Tooltip
             contentStyle={{
-              background: "#00356e",
+              background: "var(--chart-tooltip, #00356e)",
               border: "1px solid #ffffff50",
               color: "#fff",
             }}

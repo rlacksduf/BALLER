@@ -9,9 +9,7 @@ export default function QuotaNotice() {
     fetch("/api/football?action=status", { signal: controller.signal })
       .then((response) => response.json())
       .then((body) => {
-        if (
-          typeof body.blockedUntil === "number"
-        )
+        if (typeof body.blockedUntil === "number")
           markQuota(body.blockedUntil > Date.now() ? body.blockedUntil : 0);
       })
       .catch(() => {});

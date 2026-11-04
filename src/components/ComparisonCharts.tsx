@@ -87,7 +87,7 @@ export default function ComparisonCharts({
               <Legend wrapperStyle={{ color: "#fff", fontSize: 12 }} />
               <Tooltip
                 contentStyle={{
-                  background: "#00356e",
+                  background: "var(--chart-tooltip, #00356e)",
                   border: "1px solid #ffffff50",
                   color: "#fff",
                 }}

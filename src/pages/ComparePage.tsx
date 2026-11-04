@@ -1,16 +1,17 @@
-import { t, locale, localized } from "../i18n";
-import { lazy, Suspense, useEffect, useState } from "react";
+import {commonSeasons,loadComparison} from "../services/comparison";
+import {buildBattleReport} from "../utils/battleReport";
+import { t, locale, getLanguage } from "../i18n";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import PageIntro from "../components/PageIntro";
 import LoadingState from "../components/LoadingState";
 import { setSelection } from "../services/selection";
 import RoleComparison from "../components/RoleComparison";
 import SeasonStats from "../components/SeasonStats";
-import { getApiPlayerDetails, searchApiPlayers } from "../services/football";
+import { searchApiPlayers } from "../services/football";
 import type { ApiPlayer, CompetitionStats } from "../services/football";
 import type { Aggregate } from "../utils/scouting";
 import { metrics } from "../utils/scouting";
-import { newestSeasonFirst } from "../utils/seasons";
 import "./PlayersPage.css";
 const ComparisonCharts = lazy(() => import("../components/ComparisonCharts"));
 type Detail = { name: string; stats: CompetitionStats[] };
@@ -25,19 +26,23 @@ function Picker({
     [results, setResults] = useState<ApiPlayer[]>([]),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false);
+  const activeSearch=useRef<AbortController|null>(null);
+  useEffect(()=>()=>activeSearch.current?.abort(),[]);
   return (
     <form
       className="battle-picker"
       onSubmit={async (event) => {
         event.preventDefault();
-        setBusy(true);
-        setError("");
+        activeSearch.current?.abort();
+        const request=new AbortController();activeSearch.current=request;
+        setBusy(true);setError("");setResults([]);
         try {
-          setResults(await searchApiPlayers(query));
+          const results=await searchApiPlayers(query.trim(),request.signal);
+          if(!request.signal.aborted){setResults(results);if(!results.length)setError(t('검색된 선수가 없습니다. 다른 영문 이름을 입력해 보세요.'));}
         } catch (error) {
-          setError(error instanceof Error ? error.message : t("검색 실패"));
+          if(!request.signal.aborted)setError(error instanceof Error ? error.message : t("검색 실패"));
         } finally {
-          setBusy(false);
+          if(!request.signal.aborted)setBusy(false);
         }
       }}
     >
@@ -49,7 +54,7 @@ function Picker({
           maxLength={80}
           placeholder={t("영문 이름 검색")}
           value={query}
-          onChange={(event) => setQuery(event.target.value)}
+          onChange={(event) => {activeSearch.current?.abort();setBusy(false);setResults([]);setError('');setQuery(event.target.value);}}
         />
       </label>
       <button className="reset-button" disabled={busy}>
@@ -78,9 +83,10 @@ export default function ComparePage() {
   const [params, setParams] = useSearchParams();
   const a = params.get("a") ?? "",
     b = params.get("b") ?? "";
-  const [left, setLeft] = useState<Detail | null>(null),
-    [right, setRight] = useState<Detail | null>(null),
-    [error, setError] = useState(""),
+  const pair=`${a}:${b}`;
+  const [loaded,setLoaded]=useState<{pair:string;left:Detail|null;right:Detail|null}|null>(null);
+  const left=loaded?.pair===pair?loaded.left:null,right=loaded?.pair===pair?loaded.right:null;
+  const [error, setError] = useState(""),
     [busy, setBusy] = useState(false),
     [retry, setRetry] = useState(0);
   const [season, setSeason] = useState(""),
@@ -91,45 +97,21 @@ export default function ComparePage() {
     [rightDetail, setRightDetail] = useState<Aggregate | null>(null);
   useEffect(() => {
     const controller = new AbortController();
-    // 선택한 선수에 맞춰 외부 API 데이터를 다시 동기화합니다.
+    // DB 우선으로 읽고 취소된 요청은 현재 선택과 비교 결과에 반영하지 않습니다.
     // eslint-disable-next-line react/set-state-in-effect
-    setLeft(null);
-    setRight(null);
+    setLoaded(null);
     setError("");
     setLeftDetail(null);
     setRightDetail(null);
     setSeason("");
     setBusy(true);
-    const ids = [a, b];
-    if (ids.some((id) => id && !/^\d{1,12}$/.test(id))) {
-      setError(t("선수 주소가 올바르지 않습니다."));
-      setBusy(false);
-      return;
-    }
-    Promise.all(
-      ids.map((id) =>
-        id
-          ? getApiPlayerDetails(Number(id), controller.signal)
-          : Promise.resolve(null),
-      ),
-    )
-      .then(([l, r]) => {
-        setLeft(l ?? null);
-        setRight(r ?? null);
-        setSelection([
-          ...(l ? [{ id: Number(a), name: l.name }] : []),
-          ...(r ? [{ id: Number(b), name: r.name }] : []),
-        ]);
-        const seasons = [
-          ...new Set(
-            l?.stats.map((row) => row.season) ??
-              r?.stats.map((row) => row.season) ??
-              [],
-          ),
-        ]
-          .filter((s) => !l || !r || r.stats.some((row) => row.season === s))
-          .sort(newestSeasonFirst);
-        setSeason(seasons[0] ?? "");
+    loadComparison(a,b,controller.signal)
+      .then(({left:l,right:r,errors})=>{
+        if(controller.signal.aborted)return;
+        setLoaded({pair:`${a}:${b}`,left:l,right:r});
+        setError(errors.join(' · '));
+        if(a||b)setSelection([...(l?[{id:Number(a),name:l.name}]:[]),...(r&&b!==a?[{id:Number(b),name:r.name}]:[])]);
+        setSeason(commonSeasons(l,r)[0]??'');
       })
       .catch((error) => {
         if (!controller.signal.aborted)
@@ -142,17 +124,7 @@ export default function ComparePage() {
       });
     return () => controller.abort();
   }, [a, b, retry]);
-  const seasons = [
-    ...new Set(
-      left?.stats.map((row) => row.season) ??
-        right?.stats.map((row) => row.season) ??
-        [],
-    ),
-  ]
-    .filter(
-      (s) => !left || !right || right.stats.some((row) => row.season === s),
-    )
-    .sort(newestSeasonFirst);
+  const seasons=commonSeasons(left,right);
   const rows = (player: Detail | null) =>
     player?.stats.filter(
       (row) =>
@@ -187,19 +159,7 @@ export default function ComparePage() {
     [t("90분당 득점"), p90(left, "goals"), p90(right, "goals")],
     [t("90분당 도움"), p90(left, "assists"), p90(right, "assists")],
   ] as const;
-  const largest =
-    leftDetail && rightDetail
-      ? metrics
-          .filter(
-            ([key]) =>
-              leftDetail.per90[key] != null && rightDetail.per90[key] != null,
-          )
-          .map(([key, label]) => ({
-            label,
-            diff: leftDetail.per90[key]! - rightDetail.per90[key]!,
-          }))
-          .sort((x, y) => Math.abs(y.diff) - Math.abs(x.diff))[0]
-      : null;
+  const battleReport=leftDetail&&rightDetail&&left&&right?buildBattleReport(leftDetail,rightDetail,left.name,right.name,getLanguage()):null;
   return (
     <PageIntro
       label={t("선수 비교")}
@@ -236,7 +196,7 @@ export default function ComparePage() {
           <Picker label="PLAYER B" onSelect={(player) => select("b", player)} />
         </div>
         <div className="battle-grid battle-cards">
-          <article className="player-card">
+          <article className="player-card" key={`left-${a}`}>
             <span className="status-label">PLAYER A</span>
             <h2>{left?.name ?? t("선수를 선택하세요")}</h2>
             {a && (
@@ -248,7 +208,7 @@ export default function ComparePage() {
           <span className="versus" aria-hidden="true">
             VS
           </span>
-          <article className="player-card">
+          <article className="player-card" key={`right-${b}`}>
             <span className="status-label">PLAYER B</span>
             <h2>{right?.name ?? t("선수를 선택하세요")}</h2>
             {b && (
@@ -441,9 +401,7 @@ export default function ComparePage() {
                   <section className="api-search">
                     <h2>{t("상세 지표 나란히 비교")}</h2>
                     <p>
-                      {t(
-                        "각자 수집한 경기 범위의 90분당 기록입니다. 제공 범위가 다르면 직접적인 우열 판단을 제한합니다.",
-                      )}
+                      {unit==='total'?t('수집 경기 합계'):t('90분당 기록')}
                     </p>
                     <div className="api-table-wrap">
                       <table>
@@ -491,13 +449,14 @@ export default function ComparePage() {
                     </div>
                   </section>
                 )}
-                {leftDetail && rightDetail && (
+                {leftDetail && rightDetail && battleReport && (
                   <RoleComparison
                     left={leftDetail}
                     right={rightDetail}
                     leftName={left.name}
                     rightName={right.name}
                     mode={mode}
+                    report={battleReport}
                     season={season}
                     competition={[
                       ...new Set(
@@ -508,35 +467,16 @@ export default function ComparePage() {
                       .join("|")}
                   />
                 )}
-                {leftDetail && rightDetail && (
+                {leftDetail && rightDetail && battleReport && (
                   <section className="api-search final-verdict">
                     <span className="verdict-kicker">THE FINAL WORD</span>
                     <h2>{t("FINAL VERDICT · 역할 비교")}</h2>
                     <p>
-                      {leftDetail.position} VS {rightDetail.position} ·{" "}
+                      {t("90분당 기록")} ·{" "}
                       {t("수집 범위")} {leftDetail.count} / {rightDetail.count}{" "}
                       {t("경기")}
                     </p>
-                    <p>
-                      {largest
-                        ? localized(
-                            `비교 가능한 지표 중 90분당 수치 차이가 가장 큰 항목은 ${largest.label}입니다. ${largest.diff >= 0 ? left.name : right.name}의 수치가 ${Math.abs(largest.diff).toFixed(2)} 높습니다. 단위가 다른 지표를 종합 점수로 합산하지 않습니다.`,
-                            `The largest per 90 difference among comparable metrics is ${t(largest.label)}. ${largest.diff >= 0 ? left.name : right.name} is ${Math.abs(largest.diff).toFixed(2)} higher. Metrics with different units are not combined into one score.`,
-                          )
-                        : t("비교 가능한 상세 지표가 부족합니다.")}
-                    </p>
-                    <p>
-                      {leftDetail.minutes === null ||
-                      rightDetail.minutes === null ||
-                      leftDetail.minutes < 270 ||
-                      rightDetail.minutes < 270
-                        ? t(
-                            "출전시간이 적거나 누락되어 전술 적합성 결론을 제한합니다.",
-                          )
-                        : t(
-                            "각 선수의 강점과 약점은 위 스카우팅 보고서에서 확인하세요. 서로 다른 수집 범위와 리그 환경 때문에 우열을 단정할 수 없습니다.",
-                          )}
-                    </p>
+                    {battleReport.verdict.map(sentence=><p className="battle-verdict-sentence" key={sentence}>{sentence}</p>)}
                   </section>
                 )}
               </>

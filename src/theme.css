@@ -1,0 +1,46 @@
+.theme-toggle { display:inline-flex; align-items:center; justify-content:center; gap:9px; min-width:44px; min-height:44px; padding:10px 14px; border:1px solid #ffffff40; border-radius:999px; background:transparent; color:#fff; cursor:pointer; flex-shrink:0; font-size:12px; font-weight:800; }
+.theme-toggle:hover { border-color:var(--accent); }
+.theme-toggle[aria-pressed="true"] { color:var(--accent); border-color:#60ff2450; background:#60ff2409; }
+html[data-theme="dark"] { --brand:#111215; --surface:#050608; --deep:#0b0d10; --muted:#bac1cb; --line:#ffffff1f; --chart-tooltip:#17191d; background:#111215; }
+html[data-theme="dark"] body,
+html[data-theme="dark"] .app { background:#111215; color:#f5f6f7; }
+html[data-theme="dark"] .header { background:transparent; border-bottom-color:#ffffff1f; }
+html[data-theme="dark"] :is(.api-search,.player-card,.info-panel,.featured-matchup,.empty-results,.skeleton-panel,.battle-picker,.utility-drawer) { background:#050608; border-color:#ffffff1c; box-shadow:none; }
+html[data-theme="dark"] :is(.library-explorer,.library-home) { background:transparent; border:0; }
+html[data-theme="dark"] :is(.library-filters,.detail-filters,.role-score-card,.match-stat-groups section,.role-pair > div,.replace-choice,.search-empty) { background:#0b0d10; border-color:#ffffff1f; }
+html[data-theme="dark"] .library-results .player-card { background:#050608; }
+html[data-theme="dark"] :is(.api-search-form input,.player-filters input,.player-filters select,.detail-filters select,.battle-picker input,.match-details select,.replace-choice button) { background:#14161a; border-color:#ffffff26; color:#f5f6f7; }
+html[data-theme="dark"] input::placeholder { color:#939ba7; }
+html[data-theme="dark"] .home-search { background:#050608; border:1px solid #ffffff26; }
+html[data-theme="dark"] .home-search input { background:transparent; color:#f5f6f7; }
+html[data-theme="dark"] :is(.api-player-list button,.home-suggestions) { background:#0b0d10; border-color:#ffffff26; color:#f5f6f7; }
+html[data-theme="dark"] .quota-notice { background:#0b0d10; border-color:#ffffff1f; }
+html[data-theme="dark"] .connection-dot { background:var(--accent); }
+html[data-theme="dark"] .detail-summary { background:#050608; border-color:#ffffff1f; }
+html[data-theme="dark"] .detail-summary > div { background:#050608; border-color:#ffffff1f; }
+html[data-theme="dark"] .library-home .detail-summary,
+html[data-theme="dark"] .library-home .detail-summary > div { background:transparent; }
+html[data-theme="dark"] .players-content > .api-table-wrap { background:#050608; border-color:#ffffff1f; }
+html[data-theme="dark"] .api-search .api-error { background:#111215; }
+html[data-theme="dark"] :is(.role-track,.bar-track,.mirror-left,.mirror-right) { background:#292d33; }
+html[data-theme="dark"] .battle-cards .player-card { background:linear-gradient(145deg,#050608,#12151a); }
+html[data-theme="dark"] .versus { text-shadow:3px 4px 0 #050608; }
+html[data-theme="dark"] :is(.detail-back,.players-content > .add-compare) { background:#050608; }
+html[data-theme="dark"] .comparison-tray { background:#050608f5; border-color:#ffffff30; box-shadow:0 12px 40px #0005; }
+html[data-theme="dark"] :is(.api-search p,.player-card p,.hero-description,.home-lead,.detail-note,.profile-grid dt,.detail-summary dt,.player-stats dt,.quota-notice p,.site-footer,.feature-heading > span:last-child,.featured-names small) { color:#bac1cb; }
+html[data-theme="dark"] .updated-at { color:#929ba8!important; }
+html[data-theme="dark"] .numeric-higher { background:#60ff240b; color:var(--accent); }
+html[data-theme="dark"] .language-selector option { background:#0b0d10; }
+html[data-theme="dark"] .final-verdict { background:var(--accent); color:var(--ink); }
+html[data-theme="dark"] .final-verdict p,
+html[data-theme="dark"] .scouting-report h3:last-of-type + p { color:var(--ink); }
+html[data-theme="dark"] .pitch-lines { background:repeating-linear-gradient(90deg,#ffffff02 0,#ffffff02 46px,#ffffff05 46px,#ffffff05 92px); border-color:#ffffff25; }
+@media(hover:hover) { html[data-theme="dark"] :is(.player-card,.featured-matchup):hover { background:#111419; border-color:#ffffff45; } }
+@media(max-width:600px) { .header { gap:12px; }.header .nav { gap:16px; }.theme-toggle { width:40px; padding:10px; }.theme-toggle span { display:none; } }
+@media(max-width:360px) { .header { padding-left:12px; padding-right:12px; gap:8px; }.header .nav { gap:12px; }.theme-toggle { min-width:36px; width:36px; } }
+html[data-theme="dark"] .pitch-marker { box-shadow:0 20px 25px #0005; }
+html[data-theme="dark"] .pitch-art > strong { text-shadow:7px 7px 0 #0005; }
+@media(max-width:360px) { html { min-width:0; }.header .logo { font-size:24px; }.header .nav { gap:10px; }.header .nav a { font-size:11px; } }
+html[data-theme="dark"] .battle-player-report { background:#0b0d10; border-color:#ffffff1f; }
+html[data-theme="dark"] .battle-player-report li { color:#c5cbd4; }
+html[data-theme="dark"] .api-search.final-verdict p { color:#102000; }

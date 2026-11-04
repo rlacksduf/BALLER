@@ -16,6 +16,7 @@ import NotFoundPage from "./pages/NotFoundPage";
 import "./App.css";
 import "./design.css";
 import "./motion.css";
+import "./theme.css";
 
 function App() {
   useLanguage();

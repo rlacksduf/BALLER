@@ -1,3 +1,4 @@
+import ThemeToggle from "./ThemeToggle";
 import { t, localized } from "../i18n";
 import { Link, NavLink } from "react-router-dom";
 import "./Header.css";
@@ -24,6 +25,7 @@ export default function Header({ brand }: HeaderProps) {
         <NavLink to="/players">Players</NavLink>
         <NavLink to="/compare">Compare</NavLink>
       </nav>
+      <ThemeToggle />
     </header>
   );
 }

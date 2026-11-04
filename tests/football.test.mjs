@@ -106,16 +106,41 @@ test("같은 정규화 이름이 여러 팀에 해당하면 첫 번째 팀을 �
   );
 });
 
-test('Saudi Pro League는 사우디의 Pro League에 연결하며 다른 국가의 동명 대회를 배제한다',async()=>{
- const paths=[];
- const request=async input=>{
-  const path=new URL(input);paths.push(path);
-  if(path.pathname==='/teams')return Response.json({data:[{id:2501873,name:'Al-Nassr'}]});
-  if(path.pathname==='/leagues')return Response.json({data:[{id:10,name:'Pro League',country:{name:'Belgium'}},{id:262041,name:'Pro League',country:{name:'Saudi Arabia'}}]});
-  if(path.searchParams.get('homeTeamId')==='2501873'&&path.searchParams.get('leagueId')==='262041')return Response.json({data:[{id:101}]});
-  return Response.json({data:[]});
- };
- const result=await footballResponse(url('action=matches&team=Al-Nassr+FC&league=Saudi+Pro+League&season=2026&side=home'),'saudi-test',request);
- assert.equal(result.status,200);assert.equal(result.body.data[0].id,101);
- assert.ok(paths.some(path=>path.pathname==='/leagues'&&path.searchParams.get('countryCode')==='SA'));
+test("Saudi Pro League는 사우디의 Pro League에 연결하며 다른 국가의 동명 대회를 배제한다", async () => {
+  const paths = [];
+  const request = async (input) => {
+    const path = new URL(input);
+    paths.push(path);
+    if (path.pathname === "/teams")
+      return Response.json({ data: [{ id: 2501873, name: "Al-Nassr" }] });
+    if (path.pathname === "/leagues")
+      return Response.json({
+        data: [
+          { id: 10, name: "Pro League", country: { name: "Belgium" } },
+          { id: 262041, name: "Pro League", country: { name: "Saudi Arabia" } },
+        ],
+      });
+    if (
+      path.searchParams.get("homeTeamId") === "2501873" &&
+      path.searchParams.get("leagueId") === "262041"
+    )
+      return Response.json({ data: [{ id: 101 }] });
+    return Response.json({ data: [] });
+  };
+  const result = await footballResponse(
+    url(
+      "action=matches&team=Al-Nassr+FC&league=Saudi+Pro+League&season=2026&side=home",
+    ),
+    "saudi-test",
+    request,
+  );
+  assert.equal(result.status, 200);
+  assert.equal(result.body.data[0].id, 101);
+  assert.ok(
+    paths.some(
+      (path) =>
+        path.pathname === "/leagues" &&
+        path.searchParams.get("countryCode") === "SA",
+    ),
+  );
 });

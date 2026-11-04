@@ -1,12 +1,8 @@
-import { t } from "../i18n";
+import type { BattleReport } from "../utils/battleReport";
+import { t, localized } from "../i18n";
 import CohortPercentiles from "./CohortPercentiles";
 import type { Aggregate } from "../utils/scouting";
-import {
-  roleBattle,
-  roleScore,
-  roleVerdict,
-  axisLabels,
-} from "../utils/roleScores";
+import { roleScore, axisLabels } from "../utils/roleScores";
 import type { AxisKey } from "../utils/roleScores";
 export default function RoleComparison({
   left,
@@ -14,6 +10,7 @@ export default function RoleComparison({
   leftName,
   rightName,
   mode,
+  report,
   season,
   competition,
 }: {
@@ -22,19 +19,12 @@ export default function RoleComparison({
   leftName: string;
   rightName: string;
   mode: string;
+  report: BattleReport;
   season: string;
   competition: string;
 }) {
   const a = roleScore(left),
     b = roleScore(right);
-  const comparable =
-    a.eligible &&
-    b.eligible &&
-    a.role !== null &&
-    a.role === b.role &&
-    a.overall !== null &&
-    b.overall !== null;
-  const diff = comparable ? a.overall! - b.overall! : 0;
   return (
     <section className="api-search role-battle-panel">
       <span className="status-label">
@@ -51,22 +41,68 @@ export default function RoleComparison({
             ? t("종합 비교")
             : t("플레이 스타일 비교")}
       </h2>
-      <p>{t(roleBattle(left, right))}</p>
-      <div className="role-pair">
-        <div>
-          <h3>{leftName}</h3>
-          <strong>
-            {a.role ?? t("포지션 미상")} · {a.overall ?? "—"} / 100
-          </strong>
-          <p>{t(roleVerdict(left))}</p>
-        </div>
-        <div>
-          <h3>{rightName}</h3>
-          <strong>
-            {b.role ?? t("포지션 미상")} · {b.overall ?? "—"} / 100
-          </strong>
-          <p>{t(roleVerdict(right))}</p>
-        </div>
+      <p>
+        {localized(
+          "이번 상대와 비교한 90분당 기록·성공률 기준이에요.",
+          "Compared with this opponent using per 90 stats and success rates.",
+        )}
+      </p>
+      <div className="role-pair battle-pros-cons">
+        {[
+          { name: leftName, playerScore: a, playerSummary: report.left },
+          { name: rightName, playerScore: b, playerSummary: report.right },
+        ].map(({ name, playerScore, playerSummary }) => {
+          return (
+            <article key={name} className="battle-player-report">
+              <h3>{name}</h3>
+              <span className="report-role">
+                {playerScore.role ?? t("포지션 미상")}
+              </span>
+              <h4 className="strength-heading">
+                ＋ {localized("강점", "Strengths")}
+              </h4>
+              <ul>
+                {playerSummary.strengths.length ? (
+                  playerSummary.strengths.map((text) => (
+                    <li key={text}>{text}</li>
+                  ))
+                ) : (
+                  <li>
+                    {localized(
+                      report.compared
+                        ? "상대보다 뚜렷하게 앞서는 분야는 없어요."
+                        : "장점을 비교할 공통 기록이 아직 없어요.",
+                      report.compared
+                        ? "No clear edge over the opponent in shared categories."
+                        : "No shared records to compare strengths yet.",
+                    )}
+                  </li>
+                )}
+              </ul>
+              <h4 className="weakness-heading">
+                − {localized("아쉬운 점", "Weaknesses")}
+              </h4>
+              <ul>
+                {playerSummary.weaknesses.length ? (
+                  playerSummary.weaknesses.map((text) => (
+                    <li key={text}>{text}</li>
+                  ))
+                ) : (
+                  <li>
+                    {localized(
+                      report.compared
+                        ? "이번 비교에서는 뚜렷하게 밀리는 분야가 없어요."
+                        : "약점을 비교할 공통 기록이 아직 없어요.",
+                      report.compared
+                        ? "No clear deficit in this matchup."
+                        : "No shared records to compare weaknesses yet.",
+                    )}
+                  </li>
+                )}
+              </ul>
+            </article>
+          );
+        })}
       </div>
       {mode !== "basic" && (
         <div className="api-table-wrap">
@@ -118,18 +154,6 @@ export default function RoleComparison({
           </div>
         </div>
       )}
-      <h3>{t("전술적 역할 결론")}</h3>
-      <p>
-        {comparable
-          ? Math.abs(diff) < 5
-            ? t(
-                "두 선수의 역할 지수가 비슷합니다. 세부 강점과 전술적 필요에 따라 선택하세요.",
-              )
-            : `${diff > 0 ? leftName : rightName}의 같은 포지션 역할 지수가 ${Math.abs(diff)}점 높습니다. 수집 범위가 다른 규칙 지수의 차이이며 선수 능력의 우열을 확정하지 않습니다.`
-          : t(
-              "서로 다른 포지션이거나 표본·지표가 부족하므로 종합 점수로 우열을 정하지 않습니다. 각자의 역할 강점으로 판단하세요.",
-            )}
-      </p>
     </section>
   );
 }
