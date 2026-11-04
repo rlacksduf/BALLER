@@ -51,7 +51,7 @@ export function savePlayer(
     logo: null,
     ...existing,
     ...patch,
-    updatedAt: new Date().toISOString(),
+    updatedAt: patch.updatedAt ?? new Date().toISOString(),
   };
   try {
     localStorage.setItem(

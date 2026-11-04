@@ -239,15 +239,16 @@ export function createSupabaseRepository(url, secret) {
       );
     },
     async matchStats(provider, id, { limit = 100, offset = 0 } = {}) {
-      return unwrap(
+      const records = unwrap(
         await client
           .from("baller_player_match_stats")
-          .select("*")
+          .select("*,match:baller_matches(played_at,league_name,season,status)")
           .eq("provider", provider)
           .eq("player_id", id)
           .order("match_id", { ascending: false })
           .range(offset, offset + limit - 1),
       );
+      return records.map(({match,...row})=>({...row,...match}));
     },
     async counts() {
       const result = {};
@@ -274,6 +275,7 @@ export function getRepository() {
           process.env.SUPABASE_SECRET_KEY ??
             process.env.SUPABASE_SERVICE_ROLE_KEY,
         );
+      if(process.env.VERCEL)throw new Error("Configure Supabase for deployed database reads");
       return createLocalRepository(
         process.env.BALLER_DB_DIR ??
           resolve(process.cwd(), ".data", "postgres"),

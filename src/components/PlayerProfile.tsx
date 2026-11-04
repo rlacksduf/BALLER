@@ -91,8 +91,7 @@ export default function PlayerProfile({ id }: { id: number }) {
             )}
           </>
           <p>
-            {profile.name} · 현재 프로필 정보이며 선택한 과거 시즌의 소속과 다를
-            수 있습니다.
+            {profile.name} · {t("저장된 프로필과 시즌 기록 기준입니다. 일부 항목이 없거나 최신 소속과 다를 수 있습니다.")}
           </p>
           <dl className="profile-grid">
             {[

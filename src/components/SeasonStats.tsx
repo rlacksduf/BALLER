@@ -1,8 +1,10 @@
+import {getStoredAnalysis} from "../services/storedAnalysis";
+import type {StoredAnalysis} from "../services/storedAnalysis";
 import { t, locale } from "../i18n";
 import CohortPercentiles from "./CohortPercentiles";
 import { getCatalog, subscribeCatalog, savePlayer } from "../services/catalog";
 import RoleScoreCard from "./RoleScoreCard";
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { collectSeason } from "../services/seasonStats";
 import type { SeasonCollection } from "../services/seasonStats";
 import type { CompetitionStats } from "../services/football";
@@ -75,7 +77,16 @@ export default function SeasonStats({
   const blocked = until > now;
   const savedEntry = catalog.find((player) => player.id === playerId);
   const scope = [...new Set(rows.map((row) => row.type))].sort().join("|");
-  const saved =
+  const [stored,setStored]=useState<StoredAnalysis|null>(null);
+  const [reading,setReading]=useState(false);
+  useEffect(()=>{
+    if(!season)return;
+    const request=new AbortController();setReading(true);setStored(null);
+    getStoredAnalysis(playerId,season,scope,request.signal).then(value=>{if(!request.signal.aborted)setStored(value);}).catch(()=>{/* Keep the browser snapshot when the DB is temporarily unavailable. */}).finally(()=>{if(!request.signal.aborted)setReading(false);});
+    return ()=>request.abort();
+  },[playerId,season,scope]);
+  const databaseAggregate=useMemo(()=>stored?.samples.length?aggregate(stored.samples):stored?.snapshot??null,[stored]);
+  const browserSaved =
     !result &&
     !busy &&
     savedEntry?.aggregate?.season === season &&
@@ -83,6 +94,7 @@ export default function SeasonStats({
     savedEntry.aggregate.data.count > 0
       ? savedEntry.aggregate.data
       : null;
+  const saved=databaseAggregate??browserSaved;
   useEffect(() => {
     if (!result && !busy) onCollected?.(saved);
   }, [saved, result, busy, onCollected]);
@@ -94,7 +106,7 @@ export default function SeasonStats({
       <h2>{t("시즌 상세 스탯 · 분석")}</h2>
       <p>
         {t(
-          "선택한 시즌·대회의 종료 경기를 수집해 합산합니다. 경기당 API 호출이 발생하며, 동일 요청은 서버에서 캐시합니다. 누락된 지표는 0으로 채우지 않습니다.",
+          "저장된 경기 기록과 분석 요약을 먼저 표시합니다. 새 수집은 버튼을 눌렀을 때만 요청하며, API 제한 중에는 기존 기록을 유지합니다. 누락된 지표는 0으로 채우지 않습니다.",
         )}
       </p>
       <button
@@ -124,8 +136,10 @@ export default function SeasonStats({
           </button>
         </>
       )}
+      {reading&&<p role="status">{t('저장된 상세 기록 확인 중…')}</p>}
+      {stored&&data&&<p className="record-provenance">{t(stored.source==='database-matches'?'서버 DB의 경기 기록으로 분석합니다.':'이전에 수집한 분석 요약입니다. 경기별 원본과 구분해 보관합니다.')}{stored.fetchedAt&&` · ${new Date(stored.fetchedAt).toLocaleString(locale())}`}{stored.limited&&t(' · DB 조회 범위가 제한된 부분 기록입니다.')}</p>}
       {error && <p role="alert">{error}</p>}
-      {blocked && !saved && !result && (
+      {blocked && !reading && !saved && !result && (
         <p>
           {t(
             "이 조건의 유효한 저장 상세 기록이 없습니다. 이전의 0경기 조회 결과는 분석에서 제외하며, 한도 회복 후 다시 수집해야 합니다.",

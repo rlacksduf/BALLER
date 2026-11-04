@@ -142,8 +142,10 @@ export async function getPlayerProfile(id: number, signal?: AbortSignal) {
     );
   } catch (error) {
     if (signal?.aborted) throw error;
-    const saved = getCatalog().find((player) => player.id === id)?.profile;
+    const entry = getCatalog().find((player) => player.id === id);
+    const saved=entry?.profile;
     if (saved) return saved;
+    if(entry)return {name:entry.name,birthDate:null,citizenship:null,height:null,foot:null,position:entry.aggregate?.data.position??null,secondary:null,club:entry.stats[0]?.club??null,joined:null,contract:null};
     throw error;
   }
   savePlayer(id, { name: profile.name, profile });

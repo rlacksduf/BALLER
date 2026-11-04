@@ -1,3 +1,5 @@
+import {savedAnalysis,saveLibrarySnapshots} from "./db/saved-analysis.mjs";
+import {basicProfile,freshness} from "./db/read-policy.mjs";
 import { libraryPlan } from "./db/import-library.mjs";
 import { getRepository } from "./db/repository.mjs";
 const providerOf = (url) => {
@@ -51,7 +53,7 @@ export async function backendResponse(url, repository) {
       const nullable = (value) =>
         value === null || value === undefined ? null : Number(value);
       const data = items.map((player) => {
-        const p = player.profile;
+        const p = basicProfile(player,player.seasons);
         return {
           id: Number(player.external_id),
           name: player.name,
@@ -89,26 +91,27 @@ export async function backendResponse(url, repository) {
       };
     }
     const match = url.pathname.match(
-      /^\/api\/backend\/players\/(\d{1,12})(?:\/(seasons|matches))?$/,
+      /^\/api\/backend\/players\/(\d{1,12})(?:\/(seasons|matches|analysis))?$/,
     );
     if (match && Number(match[1]) > 0) {
       const id = Number(match[1]);
       const player = await repo.player(provider, id);
       if (!player)
         return { status: 404, body: { error: "DB에 저장된 선수가 없습니다." } };
+      if(match[2]==='analysis')return {status:200,body:await savedAnalysis(repo,provider,id,url.searchParams.get('season')??'',url.searchParams.get('competition')??'')};
       const data =
         match[2] === "seasons"
           ? await repo.seasons(provider, id)
           : match[2] === "matches"
             ? await repo.matchStats(provider, id, { limit, offset })
             : player;
-      return { status: 200, body: { data, source: "database" } };
+      return { status: 200, body: { data, source: "database",metadata:freshness(match[2]==='seasons'?'seasons':'profile',match[2]==='seasons'?data.map(row=>row.updated_at):[player.updated_at]) } };
     }
     return { status: 404, body: { error: "API 경로를 찾을 수 없습니다." } };
   } catch (error) {
     if (
       error.message === "Invalid provider" ||
-      error.message === "Invalid pagination"
+      error.message === "Invalid pagination" || error.message === "Invalid analysis filters"
     )
       return { status: 400, body: { error: "조회 조건을 확인해 주세요." } };
     return {
@@ -163,8 +166,10 @@ export async function handleBackend(req, res) {
       );
       const repo = await getRepository();
       await repo.ingestPlan(plan);
+      const importedAnalyses=await saveLibrarySnapshots(repo,JSON.parse(Buffer.concat(chunks).toString("utf8")).players);
       res.end(
         JSON.stringify({
+          importedAnalyses,
           importedPlayers: plan.players.length,
           importedSeasons: plan.seasons.length,
           counts: await repo.counts(),

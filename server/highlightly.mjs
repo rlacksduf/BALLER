@@ -84,12 +84,17 @@ export async function queryHighlightly(
       (live && (blocked.get(scopeKey(apiKey)) ?? 0) > Date.now()))
   )
     return cached.result;
+  let staleDatabase;
   if (live && process.env.BALLER_DB_DISABLED !== "true") {
     try {
       const { getRepository } = await import("./db/repository.mjs");
       const repo = await getRepository();
       const stored = await repo.cached(scopeKey(apiKey), path);
-      if (stored) return { status: 200, source: "database", body: stored.body };
+      if (stored) {
+        const fallback={status:200,source:'database',body:stored.body,metadata:{fetchedAt:stored.fetched_at,stale:Date.parse(stored.expires_at)<=Date.now()}};
+        if(!fallback.metadata.stale)return fallback;
+        staleDatabase=fallback;
+      }
     } catch {
       return {
         status: 503,
@@ -101,7 +106,7 @@ export async function queryHighlightly(
     }
   }
   if (live && (blocked.get(scopeKey(apiKey)) ?? 0) > Date.now())
-    return {
+    return staleDatabase ?? {
       status: 429,
       blockedUntil: blocked.get(scopeKey(apiKey)),
       body: {
@@ -114,7 +119,7 @@ export async function queryHighlightly(
     process.env.BALLER_DB_DISABLED !== "true" &&
     process.env.BALLER_ALLOW_LIVE_API !== "true"
   )
-    return {
+    return staleDatabase ?? {
       status: 503,
       body: {
         error:
@@ -136,7 +141,7 @@ export async function queryHighlightly(
         );
       }
       if (!response.ok)
-        return {
+        return staleDatabase ?? {
           status: response.status === 429 ? 429 : 502,
           body: {
             error:
@@ -150,9 +155,7 @@ export async function queryHighlightly(
       const body = await response.json();
       const result = { status: 200, body };
       if (cache.size >= 100) cache.delete(cache.keys().next().value);
-      const ttl = path.startsWith("/matches?")
-        ? 15 * 60 * 1000
-        : 24 * 60 * 60 * 1000;
+      const ttl = /^\/players\/\d+$/.test(path)?7*86400000:path.startsWith("/box-score/")?3650*86400000:path.startsWith("/matches?")?15*60*1000:86400000;
       cache.set(cacheKey, { expires: Date.now() + ttl, result });
       if (live) {
         persist();
@@ -168,7 +171,7 @@ export async function queryHighlightly(
       }
       return result;
     } catch {
-      return {
+      return staleDatabase ?? {
         status: 502,
         body: {
           error: "API 응답을 받지 못했습니다. 잠시 후 다시 시도해 주세요.",
@@ -248,7 +251,14 @@ export async function footballResponse(url, apiKey, request) {
     try {
       const { storedFootball } = await import("./db/football-read.mjs");
       const stored = await storedFootball(url);
-      if (stored) return stored;
+      if (stored) {
+        const {preferStored}=await import('./db/read-policy.mjs');
+        const effectiveKey=apiKey??process.env.HIGHLIGHTLY_API_KEY;
+        return preferStored(stored,()=>queryHighlightly(stored.refreshPath,effectiveKey),{allowed:!!stored.refreshPath&&process.env.BALLER_ALLOW_LIVE_API==='true'&&!(getQuotaStatus(effectiveKey).blockedUntil>Date.now())});
+      }
+      // A read in saved-only mode returns an empty DB search, not a provider error.
+      if(url.searchParams.has('name')&&process.env.BALLER_ALLOW_LIVE_API!=='true'&&url.searchParams.get('name').trim().length>=2&&url.searchParams.get('name').trim().length<=80&&/^\d{1,5}$/.test(url.searchParams.get('offset')??'0')&&Number(url.searchParams.get('offset')??0)<=10000)
+        return {status:200,source:'database',body:{data:[],scope:'stored-players',pagination:{limit:12,offset:Number(url.searchParams.get('offset')??0)}}};
     } catch {
       return {
         status: 503,

@@ -371,5 +371,12 @@
   "빌드업 VS 수비 개입: 미드필더의 기회 창출·패스와 수비수의 가로채기·경합 기여를 확인하세요.": "Build-up vs defending: explore midfield passing and creativity alongside defensive interceptions and duels.",
   "레이더는 공개 규칙의 0~100 역할 지수입니다. 막대는": "The radar uses rule-based role indices from 0–100. Bars show",
   "이며 각 행의 최댓값에 맞춰 길이를 표시합니다. 길이가 서로 다른 지표끼리 직접 비교되지 않습니다.": "and are scaled within each row. Lengths cannot be compared across different metrics.",
-  "90분당 기록의 표본 백분위 · 동률은 중간 순위로 계산": "Sample percentiles per 90 · Ties use mid-rank"
+  "90분당 기록의 표본 백분위 · 동률은 중간 순위로 계산": "Sample percentiles per 90 · Ties use mid-rank",
+  "저장된 상세 기록 확인 중…": "Checking saved detailed records…",
+  "서버 DB의 경기 기록으로 분석합니다.": "Analysis from match records in the server database.",
+  "이전에 수집한 분석 요약입니다. 경기별 원본과 구분해 보관합니다.": "Previously collected analysis snapshot, stored separately from original match records.",
+  " · DB 조회 범위가 제한된 부분 기록입니다.": " · Partial records within a bounded database query.",
+  "저장된 경기 기록과 분석 요약을 먼저 표시합니다. 새 수집은 버튼을 눌렀을 때만 요청하며, API 제한 중에는 기존 기록을 유지합니다. 누락된 지표는 0으로 채우지 않습니다.": "Saved match records and analysis snapshots are shown first. Collection is requested only when you press the button. Existing records remain available during API limits. Missing metrics are not filled with zero.",
+  "저장된 프로필과 시즌 기록 기준입니다. 일부 항목이 없거나 최신 소속과 다를 수 있습니다.": "Based on saved profile and season records. Some fields may be missing or differ from the current club.",
+  "저장된 선수를 먼저 검색합니다. 외부 API 제한 중에도 저장된 선수의 시즌 기록을 확인할 수 있습니다.": "Searches saved players first. Their season records remain available during external API limits."
 }

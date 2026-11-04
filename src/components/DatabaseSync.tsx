@@ -55,7 +55,7 @@ export default function DatabaseSync() {
             if (!response.ok)
               throw new Error(result.error ?? t("DB 저장에 실패했습니다."));
             setMessage(
-              `선수 ${result.importedPlayers}명 · 시즌 기록 ${result.importedSeasons}개를 DB에 저장했습니다.`,
+              `선수 ${result.importedPlayers}명 · 시즌 기록 ${result.importedSeasons}개 · 분석 요약 ${result.importedAnalyses??0}개를 DB에 저장했습니다.`,
             );
           } catch (error) {
             setMessage(

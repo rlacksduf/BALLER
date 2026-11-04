@@ -53,7 +53,7 @@ export default function ApiPlayerSearch() {
       <span className="status-label">{t("선수 검색")}</span>
       <h2 id="api-title">{t("실제 선수 찾기")}</h2>
       <p>
-        {t("영문 이름으로 검색하고 선수 카드를 선택해 시즌 기록을 확인하세요.")}
+        {t("저장된 선수를 먼저 검색합니다. 외부 API 제한 중에도 저장된 선수의 시즌 기록을 확인할 수 있습니다.")}
       </p>
       <form
         onSubmit={(event) => {

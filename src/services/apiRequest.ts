@@ -45,7 +45,7 @@ export async function apiRequest(
     saved = readCache()[path];
   const blocked = quotaUntil() > Date.now();
   if (
-    saved &&
+    !params.has("id") && !params.has("name") && saved &&
     (blocked ||
       Date.now() - saved.at <
         (params.get("action") === "matches"
@@ -63,6 +63,7 @@ export async function apiRequest(
     markQuota(until > Date.now() ? until : undefined);
     if (saved) return saved.body;
   }
+  if (!response.ok && saved && [429,502,503,504].includes(response.status))return saved.body;
   if (!response.ok)
     throw new Error(
       body &&

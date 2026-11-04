@@ -37,6 +37,8 @@ const server = createServer(async (req, res) => {
       return res.end(JSON.stringify({ error: "GET 요청만 지원합니다." }));
     }
     const result = await footballResponse(url);
+    if(result.source)res.setHeader('X-Baller-Source',result.source);
+    if(result.metadata){res.setHeader('X-Baller-Stale',String(result.metadata.stale));if(result.metadata.fetchedAt)res.setHeader('X-Baller-Fetched-At',result.metadata.fetchedAt);}
     if (result.blockedUntil)
       res.setHeader("X-Baller-Quota-Until", String(result.blockedUntil));
     res.statusCode = result.status;

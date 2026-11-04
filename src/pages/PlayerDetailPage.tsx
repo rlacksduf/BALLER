@@ -42,6 +42,7 @@ export default function PlayerDetailPage() {
     getApiPlayerDetails(Number(id), controller.signal)
       .then((data) => {
         setData(data);
+      setCompetition(data.stats.some(row=>row.type==='national league')?'national league':'');
         const latest =
           [...new Set(data.stats.map((row) => row.season))].sort(
             newestSeasonFirst,
