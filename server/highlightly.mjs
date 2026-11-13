@@ -187,64 +187,8 @@ export async function queryHighlightly(
   }
 }
 
-// 시즌 기록과 경기 목록의 이름 체계가 다를 때 검증된 ID로 연결합니다.
-export function normalizeEntityName(value) {
-  return value
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/\b(fc|cf|afc|football club)\b/g, "")
-    .replace(/[^a-z0-9]/g, "");
-}
-export function selectExactEntity(rows, name) {
-  if (!Array.isArray(rows)) return null;
-  const exact = rows.filter(
-    (row) =>
-      Number.isSafeInteger(row?.id) &&
-      typeof row?.name === "string" &&
-      normalizeEntityName(row.name) === normalizeEntityName(name),
-  );
-  return exact.length === 1 ? exact[0] : null;
-}
-async function matchesByIdentity(team, league, season, side, apiKey, request) {
-  const teamName = team
-    .replace(/^(FC|CF|AFC)\s+/i, "")
-    .replace(/\s+(FC|CF|AFC)$/i, "")
-    .trim();
-  // 공식 API에서 확인한 시즌 통계명 → 경기 대회명.
-  const saudiLeague=normalizeEntityName(league)==='saudiproleague';
-  // Confirmed from the provider's SA catalog: season stats use Saudi Pro League,
-  // while fixture catalog uses Pro League. Country is required to avoid other Pro Leagues.
-  const leagueName = saudiLeague ? "Pro League" : league === "LaLiga" ? "La Liga" : league;
-  const teamResponse = await queryHighlightly(
-    `/teams?${new URLSearchParams({ name: teamName, type: "club", limit: "100" })}`,
-    apiKey,
-    request,
-  );
-  if (teamResponse.status !== 200) return teamResponse;
-  const leagueResponse = await queryHighlightly(
-    `/leagues?${new URLSearchParams(saudiLeague?{countryCode:"SA",season,limit:"100"}:{ leagueName, season, limit: "100" })}`,
-    apiKey,
-    request,
-  );
-  if (leagueResponse.status !== 200) return leagueResponse;
-  const resolvedTeam = selectExactEntity(teamResponse.body?.data, team);
-  const leagueRows=leagueResponse.body?.data;
-  const candidates=saudiLeague&&Array.isArray(leagueRows)?leagueRows.filter(row=>row.country?.code==='SA'||row.country?.name==='Saudi Arabia'):leagueRows;
-  const resolvedLeague = selectExactEntity(candidates, leagueName);
-  if (!resolvedTeam || !resolvedLeague)
-    return {
-      status: 422,
-      body: {
-        error: `${team} · ${league}의 경기 조회용 식별자를 확정하지 못했습니다. 팀·대회 이름 차이 또는 데이터 제공 범위를 확인해야 합니다.`,
-      },
-    };
-  return queryHighlightly(
-    `/matches?${new URLSearchParams({ [side === "home" ? "homeTeamId" : "awayTeamId"]: String(resolvedTeam.id), leagueId: String(resolvedLeague.id), season, limit: "100", offset: "0" })}`,
-    apiKey,
-    request,
-  );
-}
+export { normalizeEntityName, selectExactEntity } from './entity-resolution.mjs';
+import { matchesByIdentity } from './entity-resolution.mjs';
 
 export async function footballResponse(url, apiKey, request) {
   if (url.searchParams.get("action") === "status")
@@ -305,7 +249,7 @@ export async function footballResponse(url, apiKey, request) {
       result.body.data.length > 0
     )
       return result;
-    return matchesByIdentity(team, league, season, side, apiKey, request);
+    return matchesByIdentity(team, league, season, side, path => queryHighlightly(path, apiKey, request));
   }
   const id = url.searchParams.get("id");
   const name = url.searchParams.get("name")?.trim() ?? "";
