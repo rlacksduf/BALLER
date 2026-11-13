@@ -46,26 +46,43 @@ export async function collectSeason(
     stopped: false,
     failure: null,
   };
-  for (const match of [...matches.values()].sort(
-    (a, b) => Date.parse(b.date) - Date.parse(a.date),
-  )) {
-    if (signal.aborted) throw new DOMException("Aborted", "AbortError");
-    try {
-      const sample = await getMatchPlayer(match.id, playerId, signal);
-      if (sample && sample.minutes !== null && sample.minutes > 0)
-        result.samples.push(sample);
-      else result.missing++;
-    } catch (error) {
-      if (signal.aborted) throw error;
-      result.failed++;
+  const ordered = [...matches.values()].sort((a, b) => Date.parse(b.date) - Date.parse(a.date));
+  const samples: (Sample | undefined)[] = new Array(ordered.length);
+  const requests = new AbortController();
+  const cancel = () => requests.abort();
+  signal.addEventListener("abort", cancel, { once: true });
+  if (signal.aborted) cancel();
+  let next = 0;
+  async function worker() {
+    while (!result.stopped && !requests.signal.aborted) {
+      const index = next++;
+      const match = ordered[index];
+      if (!match) return;
+      try {
+        const sample = await getMatchPlayer(match.id, playerId, requests.signal);
+        if (requests.signal.aborted) return;
+        if (sample && sample.minutes !== null && sample.minutes > 0) samples[index] = sample;
+        else result.missing++;
+      } catch (error) {
+        // Cancellation of sibling requests is not another failed match.
+        if (requests.signal.aborted) return;
+        result.failed++;
+        result.stopped = true;
+        result.failure = error instanceof Error ? error.message : "경기 조회에 실패했습니다.";
+        requests.abort();
+      }
       result.checked++;
-      result.failure =
-        error instanceof Error ? error.message : "경기 조회에 실패했습니다.";
-      result.stopped = true;
-      break;
+      progress(result.checked, result.fixtures);
     }
-    result.checked++;
-    progress(result.checked, result.fixtures);
   }
-  return result;
+  try {
+    // At most three match requests in flight; do not enqueue the whole season.
+    await Promise.all(Array.from({ length: Math.min(3, ordered.length) }, () => worker()));
+    if (signal.aborted) throw new DOMException("Aborted", "AbortError");
+    result.samples = samples.filter((sample): sample is Sample => sample !== undefined);
+    return result;
+  } finally {
+    signal.removeEventListener("abort", cancel);
+    requests.abort();
+  }
 }

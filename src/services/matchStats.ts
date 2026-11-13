@@ -30,17 +30,24 @@ export async function getMatches(
 ): Promise<{ matches: Match[]; limited: boolean }> {
   const matches: Match[] = [];
   let limited = false;
-  for (const side of ["home", "away"]) {
-    const body = await get(
-      {
-        action: "matches",
-        team,
-        league,
-        season: String(seasonStart(season)),
-        side,
-      },
-      signal,
-    );
+  const requests = new AbortController();
+  const cancel = () => requests.abort();
+  signal.addEventListener("abort", cancel, { once: true });
+  if (signal.aborted) cancel();
+  let bodies: unknown[];
+  try {
+    bodies = await Promise.all(["home", "away"].map(side => get({
+      action: "matches", team, league, season: String(seasonStart(season)), side,
+    }, requests.signal)));
+    if (signal.aborted) throw new DOMException("Aborted", "AbortError");
+  } catch (error) {
+    requests.abort();
+    if (signal.aborted) throw new DOMException("Aborted", "AbortError");
+    throw error;
+  } finally {
+    signal.removeEventListener("abort", cancel);
+  }
+  for (const body of bodies) {
     if (!record(body) || !Array.isArray(body.data))
       throw new Error("경기 목록 응답 형식이 올바르지 않습니다.");
     if (
