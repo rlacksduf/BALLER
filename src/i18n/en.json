@@ -382,5 +382,6 @@
   "저장된 선수 바로 검색": "Search saved players",
   "저장된 선수 검색 결과 {count}명": "{count} saved players found",
   "저장된 선수 중 일치하는 이름이 없습니다. 외부 API 제한 중에는 새 선수를 조회할 수 없습니다.": "No matching saved player. New players cannot be looked up while external API access is restricted.",
-  "저장된 선수 이름 검색 · 예: Haaland": "Search saved players · e.g. Haaland"
+  "저장된 선수 이름 검색 · 예: Haaland": "Search saved players · e.g. Haaland",
+  "검색된 선수가 없습니다. 이름을 확인하거나 다른 표기로 검색해 보세요.": "No players found. Check the name or try another spelling."
 }

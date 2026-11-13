@@ -1,5 +1,6 @@
+import { matchesPlayerSearch, loadPlayerSearchIndex } from "../utils/playerSearch";
 import { t, locale } from "../i18n";
-import { useState, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { Link } from "react-router-dom";
 import { getCatalog, subscribeCatalog } from "../services/catalog";
 import { getRole } from "../utils/roleScores";
@@ -68,14 +69,19 @@ export default function SavedPlayers({ home = false }: { home?: boolean }) {
       ),
     ),
   ];
+  const [namesReady, setNamesReady] = useState(false);
+  useEffect(() => {
+    if (!/[가-힣]/.test(query) || namesReady) return;
+    let active = true;
+    void loadPlayerSearchIndex().then(() => { if (active) setNamesReady(true); }).catch(() => {});
+    return () => { active = false; };
+  }, [query, namesReady]);
   const filtered = entries
     .filter(
       (entry) =>
         entry.rows.length &&
         (!role || entry.role === role) &&
-        entry.player.name
-          .toLocaleLowerCase()
-          .includes(query.trim().toLocaleLowerCase()),
+        matchesPlayerSearch(entry.player.name, query),
     )
     .sort((a, b) =>
       sort === "name"

@@ -44,7 +44,7 @@ function App() {
             BALLER.
           </Link>
           <p>THE BEAUTIFUL GAME, DECODED.</p>
-          <span>{t("데이터: Highlightly · 저장 기록 기준")}</span>
+          <span>{t("데이터: Highlightly · 저장 기록 기준")} · <a href="https://ko.wikipedia.org/wiki/위키백과:저작권" target="_blank" rel="noreferrer" title="Korean player names: Wikipedia contributors · CC BY-SA 4.0">Wikipedia</a></span>
           <Link to="/players">{t("선수 탐색 ↗")}</Link>
           <LanguageSelector />
         </footer>

@@ -1,3 +1,4 @@
+import { resolvePlayerSearch, playerSearchCandidates, loadPlayerSearchIndex } from "../utils/playerSearch.ts";
 import { apiRequest } from "./apiRequest.ts";
 import { getCatalog, savePlayer, safeLogo } from "./catalog.ts";
 export type ApiPlayer = { id: number; name: string; logo?: string | null };
@@ -21,8 +22,15 @@ export async function searchPlayerDirectory(
   signal?: AbortSignal,
   offset = 0,
 ): Promise<{players:ApiPlayer[];savedOnly:boolean}> {
+  if (/[가-힣]/.test(name)) await loadPlayerSearchIndex();
+  if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
+  const candidates = playerSearchCandidates(name);
+  if (/[가-힣]/.test(name) && candidates.length === 0)
+    throw new Error("한국어 이름 사전에서 찾지 못했습니다. 영문 이름으로 검색해 주세요.");
+  if (candidates.length > 1)
+    throw new Error(`같은 이름의 선수가 여러 명입니다. 이름을 더 입력하거나 영문으로 검색해 주세요: ${candidates.slice(0, 6).join(", ")}`);
   const body = await get(
-    new URLSearchParams({ name, offset: String(offset) }).toString(),
+    new URLSearchParams({ name: resolvePlayerSearch(name), offset: String(offset) }).toString(),
     signal,
   );
   if (!record(body) || !Array.isArray(body.data))
